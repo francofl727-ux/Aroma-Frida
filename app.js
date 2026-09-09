@@ -1,4 +1,3 @@
-
 /* ======================= CONFIGURACIÓN ======================= */
 // 1) Publicá tu Google Sheet compartido como "Cualquier persona con el enlace: Lector".
 // 2) Copiá el ID de la hoja (está en la URL, entre /d/ y /edit) y pegalo abajo.
@@ -282,7 +281,11 @@ function openLightbox(images, idx){
   $("#lightbox").classList.add("open");
 }
 function showLightboxImage(){
-  $("#lightboxImg").src = lightboxImages[lightboxIndex] || "";
+  const imgEl = $("#lightboxImg");
+  imgEl.src = lightboxImages[lightboxIndex] || "";
+  imgEl.classList.remove("lightbox-anim");
+  void imgEl.offsetWidth; // fuerza reflow para poder repetir la animación
+  imgEl.classList.add("lightbox-anim");
   const multi = lightboxImages.length > 1;
   $("#lightboxPrev").style.display = multi ? "flex" : "none";
   $("#lightboxNext").style.display = multi ? "flex" : "none";
@@ -310,6 +313,21 @@ document.addEventListener("keydown", e=>{
   if(e.key==="ArrowLeft") lightboxStep(-1);
   if(e.key==="ArrowRight") lightboxStep(1);
 });
+
+// Deslizar con el dedo para pasar de foto en el lightbox
+let touchStartX = 0, touchStartY = 0;
+const lightboxEl = $("#lightbox");
+lightboxEl.addEventListener("touchstart", e=>{
+  touchStartX = e.changedTouches[0].clientX;
+  touchStartY = e.changedTouches[0].clientY;
+}, {passive:true});
+lightboxEl.addEventListener("touchend", e=>{
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)){
+    lightboxStep(dx < 0 ? 1 : -1);
+  }
+}, {passive:true});
 
 $("#search").addEventListener("input",e=>{searchTerm=e.target.value.trim().toLocaleLowerCase();renderProducts()});
 $("#openCart").onclick=openCart;$("#floatingCart").onclick=openCart;$("#closeCart").onclick=closeCart;$("#overlay").onclick=closeCart;
