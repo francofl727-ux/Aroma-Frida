@@ -6,6 +6,14 @@
   <meta name="theme-color" content="#6d4c7d">
   <title>Aroma Frida · Catálogo</title>
   <meta name="description" content="Catálogo de Aroma Frida. Elegí tus productos y enviá tu pedido por WhatsApp.">
+
+  <!-- Vista previa al compartir el link (WhatsApp/Instagram/Facebook). -->
+  <!-- Si tenés un logo propio de Aroma Frida, avisale a Claude para reemplazar la imagen. -->
+  <meta property="og:title" content="Aroma Frida · Catálogo">
+  <meta property="og:description" content="Catálogo de Aroma Frida. Elegí tus productos y enviá tu pedido por WhatsApp.">
+  <meta property="og:image" content="https://dcdn-us.mitiendanube.com/stores/001/936/585/products/1000292992-16708e34457606550b17587148084057-640-0.webp">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -39,6 +47,14 @@
         <input id="search" type="search" placeholder="Buscar productos..." autocomplete="off">
       </label>
       <div class="results" id="results"></div>
+    </section>
+
+    <section class="offers-section" id="destacadosSection" style="display:none">
+      <div class="offers-head">
+        <span class="eyebrow">TOP VENTAS</span>
+        <h2>⭐ Destacados</h2>
+      </div>
+      <div class="products offers" id="destacados"></div>
     </section>
 
     <section class="offers-section" id="offersSection" style="display:none">
@@ -105,6 +121,15 @@
     <strong>Aroma Frida</strong>
     <span>Catálogo online · Pedidos por WhatsApp</span>
   </footer>
+
+  <div id="lightbox" class="lightbox">
+    <button id="lightboxClose" class="lightbox-close" aria-label="Cerrar">×</button>
+    <button id="lightboxPrev" class="lightbox-nav lightbox-prev" aria-label="Anterior">‹</button>
+    <img id="lightboxImg" src="" alt="">
+    <button id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="Siguiente">›</button>
+    <span id="lightboxCount" class="lightbox-count"></span>
+  </div>
+
   <script src="catalog-fallback.js"></script>
   <script src="app.js"></script>
 </body>
