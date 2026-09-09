@@ -1,4 +1,3 @@
-
 :root{
   --bg:#fbf7f2;
   --surface:#fffdf9;
@@ -54,7 +53,9 @@ main{max-width:1280px;margin:auto;padding:24px clamp(16px,4vw,40px) 80px}
 
 .lightbox{position:fixed;inset:0;background:rgba(20,15,25,.92);display:none;align-items:center;justify-content:center;z-index:999;padding:20px}
 .lightbox.open{display:flex}
-.lightbox img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:10px}
+.lightbox img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:10px;touch-action:pan-y}
+.lightbox img.lightbox-anim{animation:lightboxFade .2s ease}
+@keyframes lightboxFade{from{opacity:.3;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
 .lightbox-close{position:absolute;top:16px;right:20px;background:none;border:none;color:#fff;font-size:32px;line-height:1;cursor:pointer}
 .lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:#fff;font-size:32px;width:46px;height:46px;border-radius:50%;cursor:pointer;align-items:center;justify-content:center}
 .lightbox-prev{left:12px}
