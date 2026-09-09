@@ -7,7 +7,8 @@ const CONFIG = {
   SHEET_ID: "1Con4IbPzoO9H_Y7lcZxqlG-S1G6nsdE5bg5nAfm1V3U",
   PRODUCTS_TAB: "Productos",
   OFFERS_TAB: "Ofertas",
-  IMAGE_WIDTH: 640           // resolución de imagen que se pide al CDN (evita fotos borrosas)
+  IMAGE_WIDTH: 640,          // resolución de imagen que se pide al CDN (evita fotos borrosas)
+  ORDERS_WEBHOOK_URL: ""     // <-- PEGÁ ACÁ LA URL DE TU APPS SCRIPT (ver README-ADMIN.md) para guardar pedidos en el Sheets
 };
 /* =============================================================== */
 
@@ -24,6 +25,8 @@ const categoriesEl = $("#categories");
 const productsEl = $("#products");
 const offersSection = $("#offersSection");
 const offersEl = $("#offers");
+const destacadosSection = $("#destacadosSection");
+const destacadosEl = $("#destacados");
 
 /* ---------- Carga de datos desde Google Sheets (con respaldo local) ---------- */
 
@@ -56,6 +59,11 @@ function isActivo(v){
   return !(s === "no" || s === "false" || s === "0" || s === "inactivo");
 }
 
+function isTrue(v){
+  const s = String(v||"").trim().toLowerCase();
+  return s==="si" || s==="sí" || s==="true" || s==="1" || s==="yes";
+}
+
 function normalizeProducts(rows){
   return rows
     .filter(r => r.nombre && String(r.nombre).trim() && isActivo(r.activo))
@@ -65,7 +73,8 @@ function normalizeProducts(rows){
       price: Number(r.precio) || 0,
       category: (r.categoria ? String(r.categoria).trim() : "Otros") || "Otros",
       image: r.imagen ? String(r.imagen).trim() : "",
-      description: r.descripcion ? String(r.descripcion).trim() : ""
+      description: r.descripcion ? String(r.descripcion).trim() : "",
+      featured: isTrue(r.destacado)
     }));
 }
 
@@ -151,10 +160,11 @@ function renderProducts(){
 
 function card(p){
   const q=cart.get("p-"+p.id)||0;
+  const img = sharpen(p.image);
   return `<article class="card">
     <div class="card-image">
-      <img loading="lazy" src="${escapeAttr(sharpen(p.image))}" alt="${escapeAttr(p.name)}" onerror="this.style.opacity='.15'">
-      <span class="badge">${escapeHtml(p.category)}</span>
+      <img loading="lazy" class="zoomable" data-images="${escapeAttr(img)}" data-idx="0" src="${escapeAttr(img)}" alt="${escapeAttr(p.name)}" onerror="this.style.opacity='.15'">
+      <span class="badge">${p.featured?"⭐ ":""}${escapeHtml(p.category)}</span>
       <span class="badge id-badge">#${p.id}</span>
     </div>
     <div class="card-body">
@@ -167,6 +177,16 @@ function card(p){
       </div>
     </div>
   </article>`;
+}
+
+function renderDestacados(){
+  const list = products.filter(p=>p.featured);
+  if(!list.length){ destacadosSection.style.display = "none"; return; }
+  destacadosSection.style.display = "block";
+  destacadosEl.innerHTML = list.map(card).join("");
+  destacadosEl.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add("p-"+b.dataset.add));
+  destacadosEl.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>change("p-"+b.dataset.minus,-1));
+  destacadosEl.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>change("p-"+b.dataset.plus,1));
 }
 
 function renderOffers(){
@@ -184,9 +204,10 @@ function offerCard(o){
   let images = o.images.map(sharpen);
   if(!images.length) images = included.map(p=>sharpen(p.image)).filter(Boolean);
   images = images.slice(0,4);
+  const imgsAttr = escapeAttr(images.join("|"));
   const gallery = images.length>1
-    ? `<div class="offer-gallery gallery-${images.length}">${images.map(src=>`<img loading="lazy" src="${escapeAttr(src)}" alt="${escapeAttr(o.name)}" onerror="this.style.opacity='.15'">`).join("")}</div>`
-    : (images[0] ? `<img loading="lazy" src="${escapeAttr(images[0])}" alt="${escapeAttr(o.name)}" onerror="this.style.opacity='.15'">` : "");
+    ? `<div class="offer-gallery gallery-${images.length}">${images.map((src,i)=>`<img loading="lazy" class="zoomable" data-images="${imgsAttr}" data-idx="${i}" src="${escapeAttr(src)}" alt="${escapeAttr(o.name)}" onerror="this.style.opacity='.15'">`).join("")}</div>`
+    : (images[0] ? `<img loading="lazy" class="zoomable" data-images="${imgsAttr}" data-idx="0" src="${escapeAttr(images[0])}" alt="${escapeAttr(o.name)}" onerror="this.style.opacity='.15'">` : "");
   return `<article class="card offer-card">
     <div class="card-image">
       ${gallery}
@@ -215,11 +236,11 @@ function getItem(key){
   return products.find(p=>p.id===id);
 }
 
-function add(key){cart.set(key,(cart.get(key)||0)+1);update();renderProducts();renderOffers();renderCart();}
+function add(key){cart.set(key,(cart.get(key)||0)+1);update();renderProducts();renderOffers();renderDestacados();renderCart();}
 function change(key,delta){
   const next=(cart.get(key)||0)+delta;
   if(next<=0)cart.delete(key);else cart.set(key,next);
-  update();renderProducts();renderOffers();renderCart();
+  update();renderProducts();renderOffers();renderDestacados();renderCart();
 }
 function update(){
   let count=0,total=0;
@@ -250,14 +271,65 @@ function closeCart(){$("#overlay").classList.remove("open");$("#cartDrawer").cla
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function escapeAttr(s){return escapeHtml(s)}
 
+/* ---------- Zoom de imágenes (lightbox) ---------- */
+let lightboxImages = [];
+let lightboxIndex = 0;
+
+function openLightbox(images, idx){
+  lightboxImages = images;
+  lightboxIndex = idx;
+  showLightboxImage();
+  $("#lightbox").classList.add("open");
+}
+function showLightboxImage(){
+  $("#lightboxImg").src = lightboxImages[lightboxIndex] || "";
+  const multi = lightboxImages.length > 1;
+  $("#lightboxPrev").style.display = multi ? "flex" : "none";
+  $("#lightboxNext").style.display = multi ? "flex" : "none";
+  $("#lightboxCount").textContent = multi ? `${lightboxIndex+1} / ${lightboxImages.length}` : "";
+}
+function closeLightbox(){ $("#lightbox").classList.remove("open"); }
+function lightboxStep(delta){
+  lightboxIndex = (lightboxIndex + delta + lightboxImages.length) % lightboxImages.length;
+  showLightboxImage();
+}
+document.addEventListener("click", e=>{
+  const img = e.target.closest(".zoomable");
+  if(img){
+    const imgs = (img.dataset.images||"").split("|").filter(Boolean);
+    if(imgs.length) openLightbox(imgs, Number(img.dataset.idx||0));
+    return;
+  }
+  if(e.target.closest("#lightboxClose") || e.target.id==="lightbox") closeLightbox();
+  if(e.target.closest("#lightboxPrev")) lightboxStep(-1);
+  if(e.target.closest("#lightboxNext")) lightboxStep(1);
+});
+document.addEventListener("keydown", e=>{
+  if(!$("#lightbox").classList.contains("open")) return;
+  if(e.key==="Escape") closeLightbox();
+  if(e.key==="ArrowLeft") lightboxStep(-1);
+  if(e.key==="ArrowRight") lightboxStep(1);
+});
+
 $("#search").addEventListener("input",e=>{searchTerm=e.target.value.trim().toLocaleLowerCase();renderProducts()});
 $("#openCart").onclick=openCart;$("#floatingCart").onclick=openCart;$("#closeCart").onclick=closeCart;$("#overlay").onclick=closeCart;
-$("#clearCart").onclick=()=>{cart.clear();update();renderProducts();renderOffers();renderCart();};
+$("#clearCart").onclick=()=>{cart.clear();update();renderProducts();renderOffers();renderDestacados();renderCart();};
 
 $("#whatsappBtn").onclick=()=>{
   if(!cart.size)return;
   $("#customerDialog").showModal();
 };
+
+// Guarda el pedido en la pestaña "Pedidos" del Sheets (no bloquea el envío por WhatsApp si falla)
+function logOrder(payload){
+  if(!CONFIG.ORDERS_WEBHOOK_URL) return;
+  fetch(CONFIG.ORDERS_WEBHOOK_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: {"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify(payload)
+  }).catch(()=>{});
+}
 
 $("#customerForm").addEventListener("submit",e=>{
   e.preventDefault();
@@ -276,6 +348,7 @@ $("#customerForm").addEventListener("submit",e=>{
   if(name)msg+=`\n\nNombre: ${name}`;
   if(address)msg+=`\nDirección / localidad: ${address}`;
   if(notes)msg+=`\nObservaciones: ${notes}`;
+  logOrder({ name, address, notes, items: lines.join(" | "), total: money(total) });
   window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`,"_blank");
   $("#customerDialog").close();
 });
@@ -287,6 +360,7 @@ async function init(){
   renderCategories();
   renderProducts();
   renderOffers();
+  renderDestacados();
   renderCart();
   update();
 }
