@@ -142,7 +142,7 @@ function renderCategories(){
 function filtered(){
   return products.filter(p=>{
     const okCat = activeCategory==="Todos" || p.category===activeCategory;
-    const hay = `${p.name} ${p.category}`.toLocaleLowerCase();
+    const hay = `${p.id} ${p.name} ${p.category}`.toLocaleLowerCase();
     return okCat && hay.includes(searchTerm);
   });
 }
@@ -179,6 +179,7 @@ function card(p){
 }
 
 function renderDestacados(){
+  if(searchTerm){ destacadosSection.style.display = "none"; return; }
   const list = products.filter(p=>p.featured);
   if(!list.length){ destacadosSection.style.display = "none"; return; }
   destacadosSection.style.display = "block";
@@ -189,6 +190,7 @@ function renderDestacados(){
 }
 
 function renderOffers(){
+  if(searchTerm){ offersSection.style.display = "none"; return; }
   if(!offers.length){ offersSection.style.display = "none"; return; }
   offersSection.style.display = "block";
   offersEl.innerHTML = offers.map(offerCard).join("");
@@ -342,7 +344,7 @@ lightboxEl.addEventListener("touchend", e=>{
   }
 }, {passive:true});
 
-$("#search").addEventListener("input",e=>{searchTerm=e.target.value.trim().toLocaleLowerCase();renderProducts()});
+$("#search").addEventListener("input",e=>{searchTerm=e.target.value.trim().toLocaleLowerCase();renderProducts();renderOffers();renderDestacados();});
 $("#openCart").onclick=openCart;$("#floatingCart").onclick=openCart;$("#closeCart").onclick=closeCart;$("#overlay").onclick=closeCart;
 $("#clearCart").onclick=()=>{cart.clear();update();renderProducts();renderOffers();renderDestacados();renderCart();};
 
