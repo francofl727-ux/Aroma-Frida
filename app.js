@@ -279,6 +279,7 @@ function openLightbox(images, idx){
   lightboxIndex = idx;
   showLightboxImage();
   $("#lightbox").classList.add("open");
+  history.pushState({ lightbox: true }, "");
 }
 function showLightboxImage(){
   const imgEl = $("#lightboxImg");
@@ -291,7 +292,15 @@ function showLightboxImage(){
   $("#lightboxNext").style.display = multi ? "flex" : "none";
   $("#lightboxCount").textContent = multi ? `${lightboxIndex+1} / ${lightboxImages.length}` : "";
 }
-function closeLightbox(){ $("#lightbox").classList.remove("open"); }
+function closeLightbox(){
+  // Si la foto se abrió empujando un estado al historial, "cerrar" es volver atrás:
+  // así el botón físico de atrás del celular solo cierra la foto, no sale de la página.
+  if(history.state && history.state.lightbox){
+    history.back();
+  } else {
+    $("#lightbox").classList.remove("open");
+  }
+}
 function lightboxStep(delta){
   lightboxIndex = (lightboxIndex + delta + lightboxImages.length) % lightboxImages.length;
   showLightboxImage();
@@ -312,6 +321,10 @@ document.addEventListener("keydown", e=>{
   if(e.key==="Escape") closeLightbox();
   if(e.key==="ArrowLeft") lightboxStep(-1);
   if(e.key==="ArrowRight") lightboxStep(1);
+});
+// El botón físico de "atrás" del celular dispara esto: cerramos la foto en vez de salir de la página.
+window.addEventListener("popstate", ()=>{
+  $("#lightbox").classList.remove("open");
 });
 
 // Deslizar con el dedo para pasar de foto en el lightbox
