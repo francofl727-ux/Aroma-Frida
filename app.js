@@ -345,6 +345,10 @@ lightboxEl.addEventListener("touchend", e=>{
 }, {passive:true});
 
 $("#search").addEventListener("input",e=>{searchTerm=e.target.value.trim().toLocaleLowerCase();renderProducts();renderOffers();renderDestacados();});
+$("#search").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); }
+});
+$("#search").addEventListener("search",e=>{ e.target.blur(); }); // dispara al tocar la "x" o la lupa del teclado en iOS/Android
 $("#openCart").onclick=openCart;$("#floatingCart").onclick=openCart;$("#closeCart").onclick=closeCart;$("#overlay").onclick=closeCart;
 $("#clearCart").onclick=()=>{cart.clear();update();renderProducts();renderOffers();renderDestacados();renderCart();};
 
