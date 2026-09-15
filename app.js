@@ -267,6 +267,8 @@ function update(){
   let count=0,total=0;
   cart.forEach((q,key)=>{count+=q;const item=getItem(key);if(item){total+=item.price*q;}});
   $("#cartCount").textContent=count;$("#floatingCount").textContent=count;$("#cartTotal").textContent=money(total);
+  $("#productModalCartCount").textContent=count;
+  $("#productModalCartTotal").textContent=money(total);
 }
 function renderCart(){
   if(!cart.size){$("#cartItems").innerHTML=`<div class="empty"><div style="font-size:40px">🛍️</div><p>Tu carrito está vacío.</p><p>Elegí productos del catálogo para armar tu pedido.</p></div>`;return;}
@@ -394,18 +396,22 @@ function renderProductModal(){
   }
   const key = modalFragancia ? `p-${p.id}--${modalFragancia}` : `p-${p.id}`;
   const q = cart.get(key) || 0;
-  $("#productModalAdd").textContent = q ? `Agregar otro (${q} en el carrito)` : "Agregar al carrito";
+  const addWrap = $("#productModalAddWrap");
+  addWrap.innerHTML = q
+    ? `<div class="qty modal-qty"><button id="pmMinus">−</button><span>${q}</span><button id="pmPlus">+</button></div><button id="productModalAdd" class="add">Agregar otro</button>`
+    : `<button id="productModalAdd" class="add">Agregar al carrito</button>`;
+  if($("#pmMinus")) $("#pmMinus").onclick = ()=>{ change(key,-1); renderProductModal(); };
+  if($("#pmPlus")) $("#pmPlus").onclick = ()=>{ change(key,1); renderProductModal(); };
+  $("#productModalAdd").onclick = ()=>{ add(key); renderProductModal(); };
 }
-$("#productModalAdd").onclick = ()=>{
-  if(!modalProduct) return;
-  const key = modalFragancia ? `p-${modalProduct.id}--${modalFragancia}` : `p-${modalProduct.id}`;
-  add(key);
-  renderProductModal();
-};
 $("#productModalClose").onclick = closeProductModal;
 $("#productModal").addEventListener("click", e=>{
   if(e.target.id === "productModal") closeProductModal();
 });
+$("#productModalCartBar").onclick = ()=>{
+  closeProductModal();
+  openCart();
+};
 
 // Deslizar con el dedo para pasar de foto en el lightbox
 let touchStartX = 0, touchStartY = 0;
