@@ -62,7 +62,25 @@ main{max-width:1280px;margin:auto;padding:24px clamp(16px,4vw,40px) 80px}
 .lightbox-next{right:12px}
 .lightbox-count{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;background:rgba(0,0,0,.4);padding:4px 12px;border-radius:999px}
 @media(max-width:480px){.lightbox-nav{width:38px;height:38px;font-size:24px}}
+
+.product-modal{position:fixed;inset:0;background:rgba(20,15,25,.6);display:none;align-items:flex-end;justify-content:center;z-index:998;}
+.product-modal.open{display:flex}
+.product-modal-card{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;position:relative;padding-bottom:20px}
+.product-modal-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.9);border:none;width:34px;height:34px;border-radius:50%;font-size:22px;line-height:1;cursor:pointer;z-index:2}
+.product-modal-image{aspect-ratio:1/1;background:#f2ece8;border-radius:20px 20px 0 0;overflow:hidden}
+.product-modal-image img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.product-modal-body{padding:18px 20px 0}
+.product-modal-body h3{margin:0 0 6px;font-size:19px}
+.product-modal-body .desc{margin:0 0 10px}
+.product-modal-body .price{font-size:20px;margin-bottom:14px}
+.fragancias{margin-bottom:16px}
+.frag-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.frag-chips{display:flex;flex-wrap:wrap;gap:8px}
+.frag-chip{border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer}
+.frag-chip.active{background:var(--accent);color:#fff}
+#productModalAdd{width:100%}
 .card-body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.card-body[data-detail]{cursor:pointer}
 .card h3{font-size:14px;line-height:1.35;margin:0;min-height:38px}
 .price{font-size:20px;font-weight:850;color:var(--brand)}
 .card-actions{margin-top:auto;display:flex;gap:8px}
