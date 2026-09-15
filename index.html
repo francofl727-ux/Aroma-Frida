@@ -130,6 +130,22 @@
     <span id="lightboxCount" class="lightbox-count"></span>
   </div>
 
+  <div id="productModal" class="product-modal">
+    <div class="product-modal-card">
+      <button id="productModalClose" class="product-modal-close" aria-label="Cerrar">×</button>
+      <div class="product-modal-image">
+        <img id="productModalImg" class="zoomable" data-idx="0" src="" alt="">
+      </div>
+      <div class="product-modal-body">
+        <h3 id="productModalName"></h3>
+        <p id="productModalDesc" class="desc"></p>
+        <div id="productModalPrice" class="price"></div>
+        <div id="productModalFragancias" class="fragancias"></div>
+        <button id="productModalAdd" class="add">Agregar al carrito</button>
+      </div>
+    </div>
+  </div>
+
   <script src="catalog-fallback.js"></script>
   <script src="app.js"></script>
 </body>
