@@ -73,7 +73,8 @@ function normalizeProducts(rows){
       category: (r.categoria ? String(r.categoria).trim() : "Otros") || "Otros",
       image: r.imagen ? String(r.imagen).trim() : "",
       description: r.descripcion ? String(r.descripcion).trim() : "",
-      featured: isTrue(r.destacado)
+      featured: isTrue(r.destacado),
+      fragancias: String(r.fragancias || "").split(",").map(s => s.trim()).filter(Boolean)
     }));
 }
 
@@ -155,10 +156,15 @@ function renderProducts(){
   productsEl.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add("p-"+b.dataset.add));
   productsEl.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>change("p-"+b.dataset.minus,-1));
   productsEl.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>change("p-"+b.dataset.plus,1));
+  productsEl.querySelectorAll("[data-detail]").forEach(el=>el.onclick=()=>{
+    const p = products.find(x=>x.id===Number(el.dataset.detail));
+    if(p) openProductModal(p);
+  });
 }
 
 function card(p){
-  const q=cart.get("p-"+p.id)||0;
+  const hasFrag = p.fragancias && p.fragancias.length > 0;
+  const q = hasFrag ? 0 : (cart.get("p-"+p.id)||0);
   const img = sharpen(p.image);
   return `<article class="card">
     <div class="card-image">
@@ -166,13 +172,15 @@ function card(p){
       <span class="badge">${p.featured?"⭐ ":""}${escapeHtml(p.category)}</span>
       <span class="badge id-badge">#${p.id}</span>
     </div>
-    <div class="card-body">
+    <div class="card-body" ${hasFrag?`data-detail="${p.id}"`:""}>
       <h3>${escapeHtml(p.name)}</h3>
       ${p.description ? `<p class="desc">${escapeHtml(p.description)}</p>` : ""}
       <div class="price">${money(p.price)}</div>
       <div class="card-actions">
-        ${q ? `<div class="qty"><button data-minus="${p.id}">−</button><span>${q}</span><button data-plus="${p.id}">+</button></div>` : ""}
-        <button class="add" data-add="${p.id}">${q?"Agregar otro":"Agregar al carrito"}</button>
+        ${hasFrag
+          ? `<button class="add">Elegir aroma</button>`
+          : `${q ? `<div class="qty"><button data-minus="${p.id}">−</button><span>${q}</span><button data-plus="${p.id}">+</button></div>` : ""}<button class="add" data-add="${p.id}">${q?"Agregar otro":"Agregar al carrito"}</button>`
+        }
       </div>
     </div>
   </article>`;
@@ -187,6 +195,10 @@ function renderDestacados(){
   destacadosEl.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add("p-"+b.dataset.add));
   destacadosEl.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>change("p-"+b.dataset.minus,-1));
   destacadosEl.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>change("p-"+b.dataset.plus,1));
+  destacadosEl.querySelectorAll("[data-detail]").forEach(el=>el.onclick=()=>{
+    const p = products.find(x=>x.id===Number(el.dataset.detail));
+    if(p) openProductModal(p);
+  });
 }
 
 function renderOffers(){
@@ -229,12 +241,20 @@ function offerCard(o){
 }
 
 /* ---------- Carrito ---------- */
-// getItem: devuelve {name, price, image} tanto si es producto como si es oferta
+// getItem: devuelve {name, price, image} tanto si es producto (con o sin fragancia elegida) como si es oferta.
+// Las keys de productos con fragancia elegida tienen la forma "p-<id>--<fragancia>".
 function getItem(key){
   const [type, idStr] = key.split("-");
   const id = Number(idStr);
   if(type==="o") return offers.find(o=>o.id===id);
-  return products.find(p=>p.id===id);
+  const base = products.find(p=>p.id===id);
+  if(!base) return null;
+  const dashIdx = key.indexOf("--");
+  if(dashIdx !== -1){
+    const fragancia = key.slice(dashIdx+2);
+    return { ...base, name: `${base.name} (${fragancia})` };
+  }
+  return base;
 }
 
 function add(key){cart.set(key,(cart.get(key)||0)+1);update();renderProducts();renderOffers();renderDestacados();renderCart();}
@@ -327,6 +347,64 @@ document.addEventListener("keydown", e=>{
 // El botón físico de "atrás" del celular dispara esto: cerramos la foto en vez de salir de la página.
 window.addEventListener("popstate", ()=>{
   $("#lightbox").classList.remove("open");
+  $("#productModal").classList.remove("open");
+});
+
+/* ---------- Vista de detalle de producto (elegir fragancia/aroma) ---------- */
+let modalProduct = null;
+let modalFragancia = null;
+
+function openProductModal(p){
+  modalProduct = p;
+  modalFragancia = (p.fragancias && p.fragancias[0]) || null;
+  renderProductModal();
+  $("#productModal").classList.add("open");
+  history.pushState({ productModal: true }, "");
+}
+function closeProductModal(){
+  if(history.state && history.state.productModal){
+    history.back();
+  } else {
+    $("#productModal").classList.remove("open");
+  }
+}
+function renderProductModal(){
+  const p = modalProduct;
+  if(!p) return;
+  const img = sharpen(p.image);
+  const imgEl = $("#productModalImg");
+  imgEl.src = img;
+  imgEl.dataset.images = img;
+  $("#productModalName").textContent = p.name;
+  $("#productModalDesc").textContent = p.description || "";
+  $("#productModalDesc").style.display = p.description ? "block" : "none";
+  $("#productModalPrice").textContent = money(p.price);
+  const fragEl = $("#productModalFragancias");
+  if(p.fragancias && p.fragancias.length){
+    fragEl.style.display = "block";
+    fragEl.innerHTML = `<div class="frag-label">Elegí una fragancia:</div><div class="frag-chips">${p.fragancias.map(f=>
+      `<button class="frag-chip ${f===modalFragancia?"active":""}" data-frag="${escapeAttr(f)}">${escapeHtml(f)}</button>`
+    ).join("")}</div>`;
+    fragEl.querySelectorAll("[data-frag]").forEach(b=>{
+      b.onclick = ()=>{ modalFragancia = b.dataset.frag; renderProductModal(); };
+    });
+  } else {
+    fragEl.style.display = "none";
+    fragEl.innerHTML = "";
+  }
+  const key = modalFragancia ? `p-${p.id}--${modalFragancia}` : `p-${p.id}`;
+  const q = cart.get(key) || 0;
+  $("#productModalAdd").textContent = q ? `Agregar otro (${q} en el carrito)` : "Agregar al carrito";
+}
+$("#productModalAdd").onclick = ()=>{
+  if(!modalProduct) return;
+  const key = modalFragancia ? `p-${modalProduct.id}--${modalFragancia}` : `p-${modalProduct.id}`;
+  add(key);
+  renderProductModal();
+};
+$("#productModalClose").onclick = closeProductModal;
+$("#productModal").addEventListener("click", e=>{
+  if(e.target.id === "productModal") closeProductModal();
 });
 
 // Deslizar con el dedo para pasar de foto en el lightbox
