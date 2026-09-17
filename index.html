@@ -8,10 +8,11 @@
   <meta name="description" content="Catálogo de Aroma Frida. Elegí tus productos y enviá tu pedido por WhatsApp.">
 
   <!-- Vista previa al compartir el link (WhatsApp/Instagram/Facebook). -->
-  <!-- Si tenés un logo propio de Aroma Frida, avisale a Claude para reemplazar la imagen. -->
+  <!-- Vista previa al compartir el link (WhatsApp/Instagram/Facebook), usa el logo real de Aroma Frida. -->
   <meta property="og:title" content="Aroma Frida · Catálogo">
   <meta property="og:description" content="Catálogo de Aroma Frida. Elegí tus productos y enviá tu pedido por WhatsApp.">
-  <meta property="og:image" content="https://dcdn-us.mitiendanube.com/stores/001/936/585/products/1000292992-16708e34457606550b17587148084057-640-0.webp">
+  <meta property="og:image" content="https://aromafridacatalogowebv5.vercel.app/logo.png">
+  <link rel="icon" type="image/png" href="logo.png">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="styles.css">
@@ -19,7 +20,7 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="brand-mark">✿</div>
+      <img class="brand-mark" src="logo.png" alt="Aroma Frida">
       <div>
         <h1>Aroma Frida</h1>
         <p>Catálogo & pedidos</p>
@@ -49,6 +50,8 @@
       <div class="results" id="results"></div>
     </section>
 
+    <nav class="categories" id="categories" aria-label="Categorías"></nav>
+
     <section class="offers-section" id="offersSection" style="display:none">
       <div class="offers-head">
         <span class="eyebrow">COMBOS</span>
@@ -64,8 +67,6 @@
       </div>
       <div class="products offers" id="destacados"></div>
     </section>
-
-    <nav class="categories" id="categories" aria-label="Categorías"></nav>
 
     <section class="products" id="products"></section>
   </main>
