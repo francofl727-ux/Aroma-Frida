@@ -129,10 +129,10 @@ function sharpen(url){
 function renderCategories(){
   const counts = {};
   products.forEach(p => counts[p.category]=(counts[p.category]||0)+1);
-  const known = ["Todos","Sahumerios","Sahumos y Defumación","Hornillos","Sahumadores","Cascadas y Conos","Porta Sahumerios","Velas y Portavelas","Lámparas y Sal","Kits y Boxes","Tarot y Oráculos","Pulseras y Accesorios","Atrapasueños y Decoración","Palo Santo","Aromatización","Limpieza","Antimosquitos","Otros"];
+  const known = ["Todos","Sahumerios","Sahumos y Defumación","Hornillos","Sahumadores","Cascadas y Conos","Porta Sahumerios","Velas y Portavelas","Lámparas y Sal","Kits y Boxes","Tarot y Oráculos","Pulseras y Accesorios","Atrapasueños y Decoración","Palo Santo","Aromatización","Esencias","Textil","Limpieza","Antimosquitos","Otros"];
   const extra = Object.keys(counts).filter(c => !known.includes(c));
   const order = [...known, ...extra];
-  const icons = {Todos:"✨",Sahumerios:"🔥","Sahumos y Defumación":"🌿",Hornillos:"🪔",Sahumadores:"🏺","Cascadas y Conos":"🌀","Porta Sahumerios":"🧿","Velas y Portavelas":"🕯️","Lámparas y Sal":"💎","Kits y Boxes":"🎁","Tarot y Oráculos":"🔮","Pulseras y Accesorios":"📿","Atrapasueños y Decoración":"🌈","Palo Santo":"🌿",Aromatización:"💧",Limpieza:"🧹",Antimosquitos:"🦟",Otros:"📦"};
+  const icons = {Todos:"✨",Sahumerios:"🔥","Sahumos y Defumación":"🌿",Hornillos:"🪔",Sahumadores:"🏺","Cascadas y Conos":"🌀","Porta Sahumerios":"🧿","Velas y Portavelas":"🕯️","Lámparas y Sal":"💎","Kits y Boxes":"🎁","Tarot y Oráculos":"🔮","Pulseras y Accesorios":"📿","Atrapasueños y Decoración":"🌈","Palo Santo":"🌿",Aromatización:"💧",Esencias:"🧴",Textil:"🧺","Perfume Textil":"🧺","Perfumes Textiles":"🧺",Limpieza:"🧹",Antimosquitos:"🦟",Otros:"📦"};
   categoriesEl.innerHTML = order.filter(c => c==="Todos" || counts[c]).map(c => {
     const icon = icons[c] || "📦";
     return `<button class="cat ${activeCategory===c?"active":""}" data-cat="${escapeHtml(c)}">${icon} ${escapeHtml(c)}${c!=="Todos"?` · ${counts[c]}`:""}</button>`;
@@ -475,7 +475,14 @@ $("#customerForm").addEventListener("submit",e=>{
 });
 
 /* ---------- Arranque ---------- */
+function setTopbarHeight(){
+  const topbar = document.querySelector(".topbar");
+  if(topbar) document.documentElement.style.setProperty("--topbar-h", topbar.offsetHeight + "px");
+}
+window.addEventListener("resize", setTopbarHeight);
+
 async function init(){
+  setTopbarHeight();
   productsEl.innerHTML = `<div class="empty"><div style="font-size:36px">⏳</div><p>Cargando catálogo...</p></div>`;
   await loadCatalog();
   renderCategories();
