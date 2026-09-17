@@ -137,7 +137,7 @@ function renderCategories(){
     const icon = icons[c] || "📦";
     return `<button class="cat ${activeCategory===c?"active":""}" data-cat="${escapeHtml(c)}">${icon} ${escapeHtml(c)}${c!=="Todos"?` · ${counts[c]}`:""}</button>`;
   }).join("");
-  categoriesEl.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{activeCategory=b.dataset.cat;renderCategories();renderProducts();});
+  categoriesEl.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{activeCategory=b.dataset.cat;renderCategories();renderProducts();renderOffers();renderDestacados();});
 }
 
 function filtered(){
@@ -187,7 +187,7 @@ function card(p){
 }
 
 function renderDestacados(){
-  if(searchTerm){ destacadosSection.style.display = "none"; return; }
+  if(searchTerm || activeCategory!=="Todos"){ destacadosSection.style.display = "none"; return; }
   const list = products.filter(p=>p.featured);
   if(!list.length){ destacadosSection.style.display = "none"; return; }
   destacadosSection.style.display = "block";
@@ -202,7 +202,7 @@ function renderDestacados(){
 }
 
 function renderOffers(){
-  if(searchTerm){ offersSection.style.display = "none"; return; }
+  if(searchTerm || activeCategory!=="Todos"){ offersSection.style.display = "none"; return; }
   if(!offers.length){ offersSection.style.display = "none"; return; }
   offersSection.style.display = "block";
   offersEl.innerHTML = offers.map(offerCard).join("");
